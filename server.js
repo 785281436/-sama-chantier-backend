@@ -18,6 +18,10 @@ app.use('/api/orders',   require('./routes/orderRoutes'))
 app.use('/api/workers',  require('./routes/workerRoutes'))
 app.use('/api/reviews',  require('./routes/reviewRoutes'))
 app.use('/api/upload',   require('./routes/uploadRoutes'))
+app.use('/api/payments', require('./routes/paymentRoutes'))
+app.use('/api/stats',    require('./routes/statsRoutes'))
+app.use('/api/quotes',   require('./routes/quoteRoutes'))
+app.use('/api/messages', require('./routes/messageRoutes'))
 
 app.get('/', (req, res) => res.json({ message: '🏗️ Sama Chantier API is running' }))
 

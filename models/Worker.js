@@ -11,6 +11,7 @@ const workerSchema = new mongoose.Schema({
   zone:          { type: String },
   availability:  { type: Boolean, default: true },
   skills:        [{ type: String }],
+  portfolio:     [{ type: String }],
   ratings:       { type: Number, default: 0 },
   numReviews:    { type: Number, default: 0 },
   completedJobs: { type: Number, default: 0 },

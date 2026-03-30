@@ -1,5 +1,7 @@
 const Order   = require('../models/Order')
 const Product = require('../models/Product')
+const User    = require('../models/User')
+const { sendOrderConfirmationEmail } = require('../config/mail')
 
 const createOrder = async (req, res) => {
   try {
@@ -31,8 +33,12 @@ const createOrder = async (req, res) => {
       subtotal,
       deliveryFee,
       total: subtotal + deliveryFee,
-      notes
+      notes,
     })
+    const buyer = await User.findById(req.user._id).select('email')
+    if (buyer?.email) {
+      sendOrderConfirmationEmail(order, buyer.email).catch(() => {})
+    }
     res.status(201).json(order)
   } catch (error) {
     res.status(500).json({ message: error.message })

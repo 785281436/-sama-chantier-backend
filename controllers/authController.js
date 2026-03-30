@@ -1,5 +1,6 @@
 const User = require('../models/User')
 const { generateToken } = require('../middleware/authMiddleware')
+const { sendMail } = require('../config/mail')
 
 const register = async (req, res) => {
   try {
@@ -21,6 +22,13 @@ const register = async (req, res) => {
       phone,
       role: role || 'client'
     })
+
+    sendMail({
+      to: user.email,
+      subject: 'Bienvenue sur Sama Chantier',
+      text: `Bonjour ${user.name},\n\nVotre compte Sama Chantier est bien créé. Vous pouvez dès maintenant parcourir le catalogue et contacter des artisans.\n\nÀ bientôt !`,
+      html: `<p>Bonjour ${user.name},</p><p>Votre compte <strong>Sama Chantier</strong> est bien créé.</p><p>Vous pouvez parcourir le catalogue et contacter des artisans.</p>`,
+    }).catch(() => {})
 
     res.status(201).json({
       _id: user._id,

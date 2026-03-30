@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
     city:    { type: String, required: true },
     phone:   { type: String, required: true },
   },
-  paymentMethod: { type: String, enum: ['wave','orange_money','free_money','cash','card'], required: true },
+  paymentMethod: { type: String, enum: ['wave','orange_money','free_money','cash','card','cinetpay'], required: true },
   paymentResult: { id: String, status: String, reference: String, paidAt: Date },
   subtotal:    { type: Number, required: true },
   deliveryFee: { type: Number, default: 0 },
