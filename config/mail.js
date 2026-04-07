@@ -1,57 +1,28 @@
 const nodemailer = require('nodemailer')
 
-let smtpTransporter
-let etherealTransporter
-let etherealLogged
+let transporter
 
-const useDevEthereal = () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER) return false
-  if (process.env.MAIL_DEV === '0') return false
-  if (process.env.NODE_ENV === 'production') return false
-  return true
-}
-
-const getTransporter = async () => {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-    if (!smtpTransporter) {
-      smtpTransporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS || '',
-        },
-      })
-    }
-    return smtpTransporter
-  }
-
-  if (!useDevEthereal()) return null
-
-  if (!etherealTransporter) {
-    const testAccount = await nodemailer.createTestAccount()
-    etherealTransporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
+const getTransporter = () => {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) return null
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS || '',
+      },
     })
-    if (!etherealLogged) {
-      console.log('📧 E-mails en mode développement (Ethereal) : prévisualisation dans la console à chaque envoi.')
-      etherealLogged = true
-    }
   }
-  return etherealTransporter
+  return transporter
 }
 
 const sendMail = async ({ to, subject, text, html }) => {
-  const t = await getTransporter()
+  const t = getTransporter()
   if (!t || !to) return false
-  const from = process.env.MAIL_FROM || process.env.SMTP_USER || '"Sama Chantier" <dev@ethereal.email>'
-  const info = await t.sendMail({ from, to, subject, text, html })
-  const preview = nodemailer.getTestMessageUrl(info)
-  if (preview) console.log('📧 Prévisualisation e-mail :', preview)
+  const from = process.env.MAIL_FROM || process.env.SMTP_USER
+  await t.sendMail({ from, to, subject, text, html })
   return true
 }
 
