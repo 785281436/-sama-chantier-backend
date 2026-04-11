@@ -100,4 +100,47 @@ const verifyWorker = async (req, res) => {
   }
 }
 
-module.exports = { getWorkers, getMyWorker, getWorkerById, createWorkerProfile, updateWorkerProfile, verifyWorker }
+const addPortfolioImages = async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ user: req.user._id })
+    if (!worker) return res.status(404).json({ message: 'Profil ouvrier introuvable' })
+
+    const { images } = req.body  // images = [{ url, caption }]
+    
+    worker.portfolio.push(...images)
+    await worker.save()
+    
+    res.json({ 
+      message: `${images.length} image(s) ajoutée(s) au portfolio`, 
+      portfolio: worker.portfolio 
+    })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+const deletePortfolioImage = async (req, res) => {
+  try {
+    const worker = await Worker.findOne({ user: req.user._id })
+    if (!worker) return res.status(404).json({ message: 'Profil ouvrier introuvable' })
+
+    const { imageId } = req.params
+    worker.portfolio = worker.portfolio.filter(img => img._id.toString() !== imageId)
+    await worker.save()
+    
+    res.json({ message: 'Image supprimée', portfolio: worker.portfolio })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+
+module.exports = { 
+  getWorkers, 
+  getMyWorker, 
+  getWorkerById, 
+  createWorkerProfile, 
+  updateWorkerProfile, 
+  verifyWorker,
+  addPortfolioImages,
+  deletePortfolioImage
+}

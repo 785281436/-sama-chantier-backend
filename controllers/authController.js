@@ -102,4 +102,28 @@ const updateProfile = async (req, res) => {
   }
 }
 
-module.exports = { register, login, getMe, updateProfile }
+// 👇 AJOUTE CETTE FONCTION ICI 👇
+const sendTestEmail = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    
+    const result = await sendMail({
+      to: user.email,
+      subject: '🧱 Test Email - Sama Chantier',
+      text: `Bonjour ${user.name}, ceci est un test d'email`,
+      html: `<h1>Test</h1><p>Bonjour ${user.name}, ceci fonctionne ! ✅</p>`
+    })
+    
+    if (result) {
+      res.json({ message: '✅ Email envoyé avec succès !' })
+    } else {
+      res.status(500).json({ message: '❌ Erreur lors de l\'envoi' })
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
+// 👆 FIN DE LA FONCTION AJOUTÉE 👆
+
+// ⚠️ UN SEUL module.exports ⚠️
+module.exports = { register, login, getMe, updateProfile, sendTestEmail }
