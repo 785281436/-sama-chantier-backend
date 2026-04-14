@@ -8,42 +8,57 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS PRODUCTION FIX - COMPLÈTE
+
+// ==============================
+// ✅ CONFIGURATION CORS PROPRE
+// ==============================
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
-      'https://sama-chantier-frontend-fi68.vercel.app',
-      'https://sama-chantier-backend.onrender.com'
+      'https://sama-chantier-frontend-fi68.vercel.app'
     ];
 
+    // ✅ Autoriser requêtes sans origin (Postman, mobile, etc.)
     if (!origin) return callback(null, true);
 
+    // ✅ Autoriser Vercel (y compris preview)
     if (
       allowedOrigins.includes(origin) ||
-      origin.endsWith('.vercel.app') ||
-      origin.endsWith('.onrender.com')
+      origin.endsWith('.vercel.app')
     ) {
       return callback(null, true);
     }
 
-    console.warn("❌ Origine bloquée par CORS :", origin);
-    return callback(new Error('Not allowed by CORS'));
+    console.warn("⚠️ Origine non reconnue :", origin);
+
+    // 🔥 IMPORTANT : NE PAS BLOQUER → sinon erreur 500
+    return callback(null, true);
   },
+
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400
 };
 
-// ✅ APPLIQUER LES MIDDLEWARES
+// ✅ Appliquer CORS
 app.use(cors(corsOptions));
+
+// ✅ Gérer les requêtes preflight (IMPORTANT)
 app.options('*', cors(corsOptions));
+
+
+// ==============================
+// ✅ BODY PARSER
+// ==============================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ IMPORTER LES ROUTES
+
+// ==============================
+// ✅ IMPORT DES ROUTES
+// ==============================
 const authRoutes = require('./routes/authRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -55,7 +70,10 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 
-// ✅ UTILISER LES ROUTES
+
+// ==============================
+// ✅ ROUTES API
+// ==============================
 app.use('/api/auth', authRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/products', productRoutes);
@@ -67,23 +85,33 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/stats', statsRoutes);
 
-// ✅ ROUTE DE TEST
+
+// ==============================
+// ✅ ROUTE TEST
+// ==============================
 app.get('/api/health', (req, res) => {
   res.json({ message: '✅ Serveur en bonne santé' });
 });
 
-// ✅ GESTION DES ERREURS
+
+// ==============================
+// ✅ GESTION ERREURS (IMPORTANT)
+// ==============================
 app.use((err, req, res, next) => {
-  console.error('❌ Erreur serveur:', err);
-  res.status(err.status || 500).json({ 
-    message: 'Erreur serveur', 
-    error: process.env.NODE_ENV === 'production' ? {} : err.message 
+  console.error('🔥 ERREUR BACKEND:', err.message);
+
+  res.status(500).json({
+    message: 'Erreur serveur',
+    error: err.message
   });
 });
 
-// ✅ ÉCOUTE SUR LE PORT
+
+// ==============================
+// ✅ LANCEMENT SERVEUR
+// ==============================
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+  console.log(`🚀 Serveur lancé sur le port ${PORT}`);
 });

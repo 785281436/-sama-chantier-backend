@@ -43,16 +43,34 @@ const getProductById = async (req, res) => {
   }
 }
 
+// ...existing code...
+
 const getFeaturedProducts = async (req, res) => {
   try {
-    const products = await Product.find({ featured: true, isAvailable: true })
+    console.log('📍 Récupération des produits featured...')
+    
+    // D'abord chercher les produits featured
+    let products = await Product.find({ featured: true, isAvailable: true })
       .limit(8)
       .sort({ createdAt: -1 })
+    
+    // Si aucun produit featured, retourner les produits les plus récents
+    if (products.length === 0) {
+      console.log('⚠️ Aucun produit featured, retour des plus récents')
+      products = await Product.find({ isAvailable: true })
+        .limit(8)
+        .sort({ createdAt: -1 })
+    }
+    
+    console.log('✅ Produits trouvés:', products.length)
     res.json(products)
   } catch (error) {
+    console.error('❌ Erreur getFeaturedProducts:', error)
     res.status(500).json({ message: error.message })
   }
 }
+
+// ...existing code...
 
 const createProduct = async (req, res) => {
   try {
