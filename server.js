@@ -15,17 +15,15 @@ const corsOptions = {
       'http://localhost:5173',
       'http://localhost:3000',
       'https://sama-chantier-frontend-fi68.vercel.app',
-      'https://sama-chantier-backend.onrender.com'  // ✅ AJOUTER CELUI-CI
+      'https://sama-chantier-backend.onrender.com'
     ];
 
-    // Autoriser Postman / mobile apps / server-to-server
     if (!origin) return callback(null, true);
 
-    // Autoriser dynamiquement tous les domaines Vercel et Render
     if (
       allowedOrigins.includes(origin) ||
       origin.endsWith('.vercel.app') ||
-      origin.endsWith('.onrender.com')  // ✅ AJOUTER CELUI-CI
+      origin.endsWith('.onrender.com')
     ) {
       return callback(null, true);
     }
@@ -39,10 +37,17 @@ const corsOptions = {
   maxAge: 86400
 };
 
+// ✅ APPLIQUER LES MIDDLEWARES AVANT L'ÉCOUTE
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ... rest du code
+// ...existing code...
+
+// ✅ ÉCOUTE SUR LE PORT - À LA FIN
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+});
