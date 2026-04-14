@@ -8,22 +8,24 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS PRODUCTION FIX
+// ✅ CORS PRODUCTION FIX - COMPLÈTE
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:3000',
-      'https://sama-chantier-frontend-fi68.vercel.app'
+      'https://sama-chantier-frontend-fi68.vercel.app',
+      'https://sama-chantier-backend.onrender.com'  // ✅ AJOUTER CELUI-CI
     ];
 
     // Autoriser Postman / mobile apps / server-to-server
     if (!origin) return callback(null, true);
 
-    // Autoriser Vercel preview domains aussi
+    // Autoriser dynamiquement tous les domaines Vercel et Render
     if (
       allowedOrigins.includes(origin) ||
-      origin.endsWith('.vercel.app')
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.onrender.com')  // ✅ AJOUTER CELUI-CI
     ) {
       return callback(null, true);
     }
@@ -32,17 +34,15 @@ const corsOptions = {
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400
 };
 
-// ✅ UNE SEULE FOIS
 app.use(cors(corsOptions));
-
-// IMPORTANT pour preflight requests
 app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ... routes
+// ... rest du code
