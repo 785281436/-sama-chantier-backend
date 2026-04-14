@@ -10,8 +10,8 @@ const app = express()
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-
+// Nouvelle ligne (plus simple)
+app.use(cors({ origin: ['https://sama-chantier-frontend-fi68.vercel.app', 'http://localhost:5173'], credentials: true }))
 // Routes
 app.use('/api/auth',       require('./routes/authRoutes'))
 app.use('/api/products',   require('./routes/productRoutes'))
