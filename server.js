@@ -8,10 +8,15 @@ connectDB()
 
 const app = express()
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
+// ✅ Configuration CORS corrigée (une seule fois)
+app.use(cors({ 
+  origin: ['https://sama-chantier-frontend-fi68.vercel.app', 'http://localhost:5173'], 
+  credentials: true 
+}))
+
 app.use(express.json())
-// Nouvelle ligne (plus simple)
-app.use(cors({ origin: ['https://sama-chantier-frontend-fi68.vercel.app', 'http://localhost:5173'], credentials: true }))
+app.use(express.urlencoded({ extended: true }))
+
 // Routes
 app.use('/api/auth',       require('./routes/authRoutes'))
 app.use('/api/products',   require('./routes/productRoutes'))
@@ -27,31 +32,4 @@ app.use('/api/payments',   require('./routes/paymentRoutes'))
 // Route test
 app.get('/', (req, res) => res.json({ message: '🏗️ Sama Chantier API is running' }))
 
-// ========== ROUTE TEST EMAIL ==========
-app.get('/api/test-mail', async (req, res) => {
-  try {
-    const { sendMail } = require('./config/mail')
-    await sendMail({
-      to: 'test@example.com',
-      subject: 'Test Sama Chantier',
-      text: 'Ceci est un test',
-      html: '<h1 style="color:blue">Test réussi !</h1><p>Bienvenue sur Sama Chantier</p>'
-    })
-    res.json({ message: 'Email test envoyé, vérifie le terminal pour le lien' })
-  } catch (error) {
-    res.status(500).json({ message: error.message })
-  }
-})
-// =======================================
-
-// 404
-app.use((req, res) => res.status(404).json({ message: 'Route introuvable' }))
-
-// Erreurs globales
-app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).json({ message: err.message || 'Erreur serveur' })
-})
-
-const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`🚀 Serveur démarré sur le port ${PORT}`))
+// ... le reste de votre code
