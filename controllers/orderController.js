@@ -1,20 +1,16 @@
 const Order   = require('../models/Order')
 const Product = require('../models/Product')
-const User    = require('../models/User')
 
 const createOrder = async (req, res) => {
   try {
     const { items, shippingAddress, paymentMethod, notes } = req.body
     if (!items?.length) return res.status(400).json({ message: 'Aucun article' })
-    
     let subtotal = 0
     const enrichedItems = []
-    
     for (const item of items) {
       const product = await Product.findById(item.product)
       if (!product) return res.status(404).json({ message: 'Produit introuvable' })
       if (product.stock < item.quantity) return res.status(400).json({ message: `Stock insuffisant : ${product.name}` })
-      
       subtotal += product.price * item.quantity
       enrichedItems.push({
         product:  product._id,
@@ -23,11 +19,9 @@ const createOrder = async (req, res) => {
         quantity: item.quantity,
         price:    product.price
       })
-      
       product.stock -= item.quantity
       await product.save()
     }
-    
     const deliveryFee = subtotal > 50000 ? 0 : 2000
     const order = await Order.create({
       user: req.user._id,
@@ -37,9 +31,8 @@ const createOrder = async (req, res) => {
       subtotal,
       deliveryFee,
       total: subtotal + deliveryFee,
-      notes,
+      notes
     })
-    
     res.status(201).json(order)
   } catch (error) {
     res.status(500).json({ message: error.message })

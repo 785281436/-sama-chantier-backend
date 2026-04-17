@@ -1,13 +1,32 @@
-const express = require('express')
-const router  = express.Router()
-const { getWorkers, getMyWorker, getWorkerById, createWorkerProfile, updateWorkerProfile, verifyWorker } = require('../controllers/workerController')
-const { protect, admin } = require('../middleware/authMiddleware')
+const express = require('express');
+const router = express.Router();
+const { protect, admin } = require('../middleware/authMiddleware');
+const { 
+  getWorkers, 
+  getWorkerById, 
+  createWorkerProfile, 
+  updateWorkerProfile, 
+  verifyWorker,
+  getTopWorkers,
+  getSponsoredWorkers,
+  sponsorWorker,
+  confirmSponsor,
+  recalculateAllScores
+} = require('../controllers/workerController');
 
-router.get('/',            getWorkers)
-router.get('/me',          protect, getMyWorker)
-router.get('/:id',         getWorkerById)
-router.post('/',           protect, createWorkerProfile)
-router.put('/:id',         protect, updateWorkerProfile)
-router.put('/:id/verify',  protect, admin, verifyWorker)
+router.route('/')
+  .get(getWorkers)
+  .post(protect, createWorkerProfile);
 
-module.exports = router
+router.get('/top', getTopWorkers);
+router.get('/sponsored', getSponsoredWorkers);
+router.post('/recalculate-scores', protect, recalculateAllScores);
+
+router.post('/:id/sponsor', protect, sponsorWorker);
+router.post('/confirm-sponsor', protect, confirmSponsor);
+
+router.get('/:id', getWorkerById);
+router.put('/:id', protect, updateWorkerProfile);
+router.put('/:id/verify', protect, admin, verifyWorker);
+
+module.exports = router;

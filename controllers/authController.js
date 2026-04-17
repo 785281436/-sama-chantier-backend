@@ -1,18 +1,27 @@
-const User = require('../models/User')
-const { generateToken } = require('../middleware/authMiddleware')
-const { sendMail } = require('../config/mail')
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
+// Générer un token JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE || '30d',
+  });
+};
+
+// @desc    Inscription
+// @route   POST /api/auth/register
 const register = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body
+    const { name, email, password, phone, role } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Nom, email et mot de passe sont requis' })
+      return res.status(400).json({ message: 'Nom, email et mot de passe sont requis' });
     }
 
-    const exists = await User.findOne({ email })
+    const exists = await User.findOne({ email });
     if (exists) {
-      return res.status(400).json({ message: 'Email déjà utilisé' })
+      return res.status(400).json({ message: 'Email déjà utilisé' });
     }
 
     const user = await User.create({
@@ -21,14 +30,7 @@ const register = async (req, res) => {
       password,
       phone,
       role: role || 'client'
-    })
-
-    sendMail({
-      to: user.email,
-      subject: 'Bienvenue sur Sama Chantier',
-      text: `Bonjour ${user.name},\n\nVotre compte Sama Chantier est bien créé. Vous pouvez dès maintenant parcourir le catalogue et contacter des artisans.\n\nÀ bientôt !`,
-      html: `<p>Bonjour ${user.name},</p><p>Votre compte <strong>Sama Chantier</strong> est bien créé.</p><p>Vous pouvez parcourir le catalogue et contacter des artisans.</p>`,
-    }).catch(() => {})
+    });
 
     res.status(201).json({
       _id: user._id,
@@ -36,23 +38,25 @@ const register = async (req, res) => {
       email: user.email,
       role: user.role,
       token: generateToken(user._id)
-    })
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
+};
 
+// @desc    Connexion
+// @route   POST /api/auth/login
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { email, password } = req.body;
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email });
     if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: 'Email ou mot de passe incorrect' })
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
     }
 
     if (!user.isActive) {
-      return res.status(403).json({ message: 'Compte désactivé' })
+      return res.status(403).json({ message: 'Compte désactivé' });
     }
 
     res.json({
@@ -63,67 +67,47 @@ const login = async (req, res) => {
       role: user.role,
       avatar: user.avatar,
       token: generateToken(user._id)
-    })
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
+};
 
+// @desc    Récupérer mon profil
+// @route   GET /api/auth/me
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password')
-    res.json(user)
+    const user = await User.findById(req.user._id).select('-password');
+    res.json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
+};
 
+// @desc    Mettre à jour mon profil
+// @route   PUT /api/auth/profile
 const updateProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ message: 'Utilisateur introuvable' })
+      return res.status(404).json({ message: 'Utilisateur introuvable' });
     }
-    user.name    = req.body.name    || user.name
-    user.phone   = req.body.phone   || user.phone
-    user.address = req.body.address || user.address
-    user.city    = req.body.city    || user.city
-    if (req.body.password) user.password = req.body.password
-    const updated = await user.save()
+    user.name = req.body.name || user.name;
+    user.phone = req.body.phone || user.phone;
+    user.address = req.body.address || user.address;
+    user.city = req.body.city || user.city;
+    if (req.body.password) user.password = req.body.password;
+    const updated = await user.save();
     res.json({
-      _id:   updated._id,
-      name:  updated.name,
+      _id: updated._id,
+      name: updated.name,
       email: updated.email,
-      role:  updated.role,
+      role: updated.role,
       token: generateToken(updated._id)
-    })
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: error.message });
   }
-}
+};
 
-// 👇 AJOUTE CETTE FONCTION ICI 👇
-const sendTestEmail = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    
-    const result = await sendMail({
-      to: user.email,
-      subject: '🧱 Test Email - Sama Chantier',
-      text: `Bonjour ${user.name}, ceci est un test d'email`,
-      html: `<h1>Test</h1><p>Bonjour ${user.name}, ceci fonctionne ! ✅</p>`
-    })
-    
-    if (result) {
-      res.json({ message: '✅ Email envoyé avec succès !' })
-    } else {
-      res.status(500).json({ message: '❌ Erreur lors de l\'envoi' })
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message })
-  }
-}
-// 👆 FIN DE LA FONCTION AJOUTÉE 👆
-
-// ⚠️ UN SEUL module.exports ⚠️
-module.exports = { register, login, getMe, updateProfile, sendTestEmail }
+module.exports = { register, login, getMe, updateProfile };
